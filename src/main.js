@@ -118,7 +118,9 @@ module.exports = {
     }))
 
     const initializeESLintWorker = () => {
+      console.log('initializing the worker')
       this.worker = new Task(require.resolve('./worker.js'))
+      console.log('worker initialized')
     }
     // Initialize the worker during an idle time
     window.requestIdleCallback(initializeESLintWorker)
@@ -126,6 +128,7 @@ module.exports = {
 
   deactivate() {
     if (this.worker !== null) {
+      console.log('terminating the worker')
       this.worker.terminate()
       this.worker = null
     }
@@ -139,11 +142,15 @@ module.exports = {
       scope: 'file',
       lintOnFly: true,
       lint: async (textEditor) => {
+        const filePath = textEditor.getPath()
+        console.log('lint() on', filePath)
+
         const text = textEditor.getText()
         if (text.length === 0) {
+          console.log('Empty editor')
           return []
         }
-        const filePath = textEditor.getPath()
+        // const filePath = textEditor.getPath()
 
         let rules = {}
         if (textEditor.isModified() && Object.keys(ignoredRulesWhenModified).length > 0) {

@@ -16,10 +16,12 @@ import { Range } from 'atom'
  */
 const startWorker = (worker) => {
   if (worker.started) {
+    console.log('worker already started')
     // Worker start request has already been sent
     return
   }
   // Send empty arguments as we don't use them in the worker
+  console.log('starting the worker')
   worker.start([])
   // NOTE: Modifies the Task of the worker, but it's the only clean way to track this
   worker.started = true
@@ -57,6 +59,7 @@ export async function sendJob(worker, config) {
       resolve(data)
     })
     // Send the job on to the worker
+    console.log('sending job', config)
     try {
       worker.send(config)
     } catch (e) {

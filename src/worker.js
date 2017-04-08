@@ -37,6 +37,7 @@ function lintJob({ cliEngineOptions, contents, eslint, filePath }) {
 
 function fixJob({ cliEngineOptions, eslint, filePath }) {
   const report = lintJob({ cliEngineOptions, eslint, filePath })
+  console.log('fix lint report', report)
 
   eslint.CLIEngine.outputFixes(report)
 
@@ -47,7 +48,9 @@ function fixJob({ cliEngineOptions, eslint, filePath }) {
 }
 
 module.exports = async function () {
+  console.log('worker started')
   process.on('message', (jobConfig) => {
+    console.log('worker config', jobConfig)
     const { contents, type, config, filePath, projectPath, rules, emitKey } = jobConfig
     if (config.disableFSCache) {
       FindCache.clear()
@@ -58,6 +61,7 @@ module.exports = async function () {
     const configPath = Helpers.getConfigPath(fileDir)
     const noProjectConfig = (configPath === null || isConfigAtHomeRoot(configPath))
     if (noProjectConfig && config.disableWhenNoEslintConfig) {
+      console.log('worker disable no config')
       emit(emitKey, [])
       return
     }
@@ -78,6 +82,7 @@ module.exports = async function () {
       const modulesDir = Path.dirname(findCached(fileDir, 'node_modules/eslint') || '')
       response = Helpers.findESLintDirectory(modulesDir, config)
     }
+    console.log('worker response', response)
     emit(emitKey, response)
   })
 }

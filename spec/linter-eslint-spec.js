@@ -4,7 +4,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { tmpdir } from 'os'
 import rimraf from 'rimraf'
-import { beforeEach, it } from 'jasmine-fix'
+import { beforeEach, it, wait, fit } from 'jasmine-fix'
 // NOTE: If using fit you must add it to the list above!
 import linterEslint from '../lib/main'
 
@@ -205,6 +205,8 @@ describe('The eslint provider for Linter', () => {
       return new Promise(async (resolve) => {
         // Subscribe to the file reload event
         const editorReloadSub = textEditor.getBuffer().onDidReload(async () => {
+          console.log('onDidReload')
+          console.log(textEditor.getText())
           editorReloadSub.dispose()
           // File has been reloaded in Atom, notification checking will happen
           // async either way, but should already be finished at this point
@@ -221,11 +223,17 @@ describe('The eslint provider for Linter', () => {
     }
 
     it('should fix linting errors', async () => {
+      // atom.config.set('linter-eslint.rulesToDisableWhileFixing', ['semi'])
+      const editorChangeSub = editor.onDidChange(() => {
+        console.log('onDidChange')
+        console.log(editor.getText())
+      })
       await firstLint(editor)
       await makeFixes(editor)
       const messagesAfterFixing = await lint(editor)
 
       expect(messagesAfterFixing.length).toBe(0)
+      editorChangeSub.dispose()
     })
 
     // NOTE: This actually works, but if both specs in this describe() are enabled
@@ -234,13 +242,20 @@ describe('The eslint provider for Linter', () => {
     xit('should not fix linting errors for rules that are disabled with rulesToDisableWhileFixing', async () => {
       atom.config.set('linter-eslint.rulesToDisableWhileFixing', ['semi'])
 
+      const editorChangeSub = editor.onDidChange(() => {
+        console.log('onDidChange')
+        console.log(editor.getText())
+      })
+
       await firstLint(editor)
       await makeFixes(editor)
+      await wait(100)
       const messagesAfterFixing = await lint(editor)
       const messageHTML = 'Extra semicolon. (<a href="http://eslint.org/docs/rules/semi">semi</a>)'
 
       expect(messagesAfterFixing.length).toBe(1)
       expect(messagesAfterFixing[0].html).toBe(messageHTML)
+      editorChangeSub.dispose()
     })
   })
 
